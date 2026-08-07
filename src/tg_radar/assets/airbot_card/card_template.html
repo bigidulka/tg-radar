@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=1122, initial-scale=1">
+  <title>{title}</title>
+  <style>{css}</style>
+</head>
+<body class="airbot-page">
+    <main class="airbot-card" style="--meter: {meter}%;">
+    <div class="backplate" style="background-image: url('{backplate}');"></div>
+    <div class="card-overlay"></div>
+    <div class="card-inner">
+      <header class="topbar">
+        <div>
+          <div class="brand">Воздухан-радар</div>
+          <div class="bot">@ventilator_sbot</div>
+        </div>
+        <div>
+          <div class="channel">@{channel}</div>
+          <div class="channel-label">канал проверяют</div>
+        </div>
+      </header>
+      <section class="hero">
+        <div class="hero-left">
+          <div class="elo">{elo_label}</div>
+          <div class="rank">{rank}</div>
+          <div class="measure">{measure}</div>
+          <div class="hero-custom-tag">{custom_tag}</div>
+        </div>
+        <div class="avatar-ring">{avatar}</div>
+        <div class="hero-right">
+          <div class="promise-title">Обещает</div>
+          <div class="one-liner">{one_liner}</div>
+        </div>
+      </section>
+      {sections}
+    </div>
+  </main>
+</body>
+</html>

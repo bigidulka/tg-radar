@@ -1,0 +1,223 @@
+{
+  "research_basis": {
+    "arousal": "Berger & Milkman 2012: high-arousal emotions increase sharing.",
+    "transportation": "Green & Brock 2000: narrative transportation increases persuasion.",
+    "curiosity_gap": "Loewenstein 1994: curiosity grows from a salient information gap.",
+    "scannability": "Nielsen Norman Group: readers scan dense content; front-load structure.",
+    "utility": "Berger & Milkman 2012: practical usefulness predicts sharing alongside emotion."
+  },
+  "stage_order": {
+    "article_type": 10,
+    "narrative_arc": 20,
+    "topic": 30,
+    "hook": 40,
+    "conflict": 50,
+    "thesis": 60,
+    "evidence": 70,
+    "counterpoint": 80,
+    "block": 90,
+    "takeaway": 100,
+    "cta": 110
+  },
+  "card_templates": {
+    "hook": {
+      "summary": "Первая строка должна создавать зазор между тем, что читатель думает, и тем, что сейчас докажет пост.",
+      "stage": "opening",
+      "basis": ["curiosity_gap", "arousal"]
+    },
+    "conflict": {
+      "summary": "Конфликт нужен, чтобы статья была не пересказом новости, а позицией.",
+      "body_template": "{title}\n\nОпора: {evidence}",
+      "stage": "tension",
+      "basis": ["arousal", "transportation"]
+    },
+    "thesis": {
+      "body_template": "Тезис: {title}\n\nПочему читателю не все равно: {summary}",
+      "stage": "position",
+      "basis": ["scannability", "utility"]
+    },
+    "evidence": {
+      "title_template": "Доказательство из @{channel}",
+      "stage": "proof",
+      "basis": ["utility", "transportation"]
+    },
+    "counterpoint": {
+      "summary": "Антитезис повышает доверие: автор видит слабое место своей позиции.",
+      "stage": "objection",
+      "basis": ["utility"]
+    },
+    "block": {
+      "title_template": "Блок: {title}",
+      "stage": "body",
+      "basis": ["scannability", "transportation"]
+    },
+    "takeaway": {
+      "summary": "Финальный вывод должен менять рамку, а не повторять тезис.",
+      "stage": "resolution",
+      "basis": ["utility"]
+    },
+    "cta": {
+      "summary": "Вопрос в конце должен собирать опыт читателей, а не просить реакции.",
+      "stage": "discussion",
+      "basis": ["curiosity_gap"]
+    }
+  },
+  "framework_cards": [
+    {
+      "card_type": "article_type",
+      "title": "Рейдж-эссе с доказательствами",
+      "summary": "Формат: сильный конфликт, тезис, 3-5 доказательств из обсуждений, честный counterpoint, вопрос.",
+      "body": "Использовать, когда в корпусе много жалоб, страха или конфликта. Эмоция цепляет, доказательства удерживают.",
+      "score": 0.86,
+      "basis": ["arousal", "utility"]
+    },
+    {
+      "card_type": "article_type",
+      "title": "Разбор боли рынка",
+      "summary": "Формат: что люди повторяют, почему это болит, кто выигрывает, что делать читателю.",
+      "body_template": "Подходит для темы `{keyword_hint}`. Каналы-источники: {top_channels_or_fallback}.",
+      "score": 0.8,
+      "basis": ["utility", "scannability"]
+    },
+    {
+      "card_type": "article_type",
+      "title": "История одного сдвига",
+      "summary": "Формат: старая норма -> событие -> конфликт -> новый навык -> вопрос к читателю.",
+      "body": "Нарратив нужен, когда надо не только объяснить, а перенести читателя в ситуацию и поменять рамку.",
+      "score": 0.78,
+      "basis": ["transportation", "curiosity_gap"]
+    },
+    {
+      "card_type": "narrative_arc",
+      "title": "Арка: старая власть разработчика ломается",
+      "summary": "Старая роль: писать код руками. Новая роль: ставить рамки, проверять агентов, владеть контекстом.",
+      "body": "Начать с привычного статуса, показать угрозу, затем дать новую роль как выход.",
+      "score": 0.84,
+      "basis": ["transportation", "arousal"]
+    },
+    {
+      "card_type": "narrative_arc",
+      "title": "Арка: инструмент обещает скорость, команда платит контролем",
+      "summary": "Скорость AI-инструментов продается как магия, но обсуждения крутятся вокруг качества, лимитов, доверия и процессов.",
+      "body": "Эта арка хорошо работает для bigtech, fintech и startup угла.",
+      "score": 0.82,
+      "basis": ["curiosity_gap", "utility"]
+    }
+  ],
+  "framework_fallbacks": {
+    "top_channels": "пока нет"
+  },
+  "fallback_outline": {
+    "head": [
+      ["hook", "Hook", "{article_angle_or_title}"],
+      ["conflict", "Conflict", "Почему это спорно и эмоционально важно."],
+      ["thesis", "Thesis", "{angle_from_cards}"]
+    ],
+    "tail": [
+      ["counterpoint", "Counterpoint", "Самый честный counterpoint: не каждый процесс должен становиться агентным."],
+      ["takeaway", "Takeaway", "Главный вопрос не в модели, а в том, кто умеет ставить рамки, проверять результат и превращать шум в продукт."],
+      ["cta", "Discussion", "Где у вас AI-кодинг уже ускорил работу, а где начал ломать процесс?"]
+    ]
+  },
+  "fallback_draft": {
+    "discussion_label": "Что видно по обсуждениям:",
+    "conclusion": "Мой вывод: ценность смещается от написания строк к постановке рамок, проверке результата и выбору правильного места для автоматизации.",
+    "question": "Вопрос: где для вас AI-кодинг уже стал преимуществом, а где пока только создает хаос?"
+  },
+  "draft_score_phrases": ["я считаю", "мой вывод", "видно", "похоже", "риск", "конфликт"],
+  "hook_rules": [
+    {
+      "tokens": ["старой школы", "сеньор"],
+      "text": "Сеньор старой школы умер не потому, что AI пишет код лучше"
+    },
+    {
+      "tokens": ["лимит", "подписк", "цен", "$", "руб"],
+      "text": "AI-кодинг стал дешевле на словах и дороже в реальном процессе"
+    },
+    {
+      "tokens": ["агент", "agent", "mcp"],
+      "text": "AI-агенты обещали снять рутину, но принесли новый слой контроля"
+    }
+  ],
+  "hook_question_template": "Все задают один вопрос: {fallback}",
+  "hook_default_template": "Проблема не в новости. Проблема в том, что {fallback}",
+  "conflict_rules": [
+    {
+      "tokens": ["cursor", "windsurf", "copilot", "claude code"],
+      "text": "Конфликт: инструмент продает скорость индивидуального разработчика, а ломается процесс команды."
+    },
+    {
+      "tokens": ["агент", "agent", "mcp"],
+      "text": "Конфликт: агент делает больше действий, но человек все равно отвечает за последствия."
+    },
+    {
+      "tokens": ["сбер", "яндекс", "банк", "финтех", "bigtech"],
+      "text": "Конфликт: bigtech быстрее внедряет AI, но боль контроля и найма перекладывается на команды."
+    }
+  ],
+  "conflict_default": "Конфликт: люди хотят ускорения, но боятся потерять качество, статус и контроль.",
+  "counterpoint_rules": [
+    {
+      "tokens": ["модель", "model", "benchmark", "h100"],
+      "text": "Counterpoint: сама модель не меняет процесс. Без evals, ревью и контекста это просто еще один быстрый генератор шума."
+    },
+    {
+      "tokens": ["агент", "agent"],
+      "text": "Counterpoint: агентность не всегда нужна. Иногда обычный скрипт, checklist или IDE command безопаснее и дешевле."
+    }
+  ],
+  "counterpoint_default": "Counterpoint: не все сопротивление AI — страх. Часть сопротивления — нормальная инженерная гигиена.",
+  "block_template": "Мини-блок: {title}\n\nЧто видно в обсуждении: {summary}\n\nПочему это важно: здесь есть не только факт, а смена ожиданий от разработчика и команды.",
+  "takeaway_rules": [
+    {
+      "tokens": ["старой школы", "сеньор", "разработчик"],
+      "text": "Вывод: статус разработчика теперь держится не на скорости набора кода, а на умении управлять контекстом, риском и проверкой."
+    },
+    {
+      "tokens": ["агент", "agent"],
+      "text": "Вывод: следующий дефицитный навык — не писать промпты, а проектировать границы автономии агента."
+    }
+  ],
+  "takeaway_default": "Вывод: выигрывает не тот, кто первым подключил AI, а тот, кто встроил его в проверяемый процесс.",
+  "cta_rules": [
+    {
+      "tokens": ["cursor", "windsurf", "copilot", "claude code"],
+      "text": "Где AI IDE реально ускорила вас, а где начала ломать ревью, архитектуру или доверие к коду?"
+    },
+    {
+      "tokens": ["агент", "agent"],
+      "text": "Какую задачу вы уже готовы отдать агенту полностью, а где пока не рискнете?"
+    }
+  ],
+  "cta_default": "Какая боль в этой теме у вас повторяется чаще всего: деньги, качество, контроль или статус?",
+  "title_prefixes": {
+    "complaint": "Боль",
+    "question": "Вопрос",
+    "pricing": "Деньги",
+    "comparison": "Сравнение",
+    "workaround": "Костыль",
+    "default": "Тема"
+  },
+  "angle_title_rules": [
+    {
+      "tokens": ["cursor", "windsurf", "claude code", "copilot"],
+      "text": "AI IDE уже продают скорость, но счет приходит качеством процесса"
+    },
+    {
+      "tokens": ["агент", "agent", "mcp"],
+      "text": "AI-агенты убирают рутину, но требуют нового контроля"
+    },
+    {
+      "tokens": ["сбер", "яндекс", "bigtech", "банк", "финтех"],
+      "text": "BigTech и финтех забирают AI-скорость, но боль остается у команд"
+    }
+  ],
+  "angle_question_template": "Все спрашивают одно: {fallback}",
+  "angle_default_template": "Спорная мысль: {fallback}",
+  "angle_summary_template": "Можно развернуть в пост: не пересказывать новость, а показать конфликт в опыте людей. {summary}",
+  "empty_angle": "Выбрать живую боль из Telegram и превратить ее в позицию автора.",
+  "angle_from_cards_template": "Люди обсуждают {common}. Сильный угол: показать не инструмент, а смену власти в работе разработчика.",
+  "angle_stop_words": ["котор", "потому", "через", "можно", "будет", "очень"],
+  "rage_tokens": ["умер", "бесит", "вран", "сломал", "увол", "замен", "страх", "хаос", "монопол", "дорог"],
+  "novelty_rare_tokens": ["fable", "mythos", "kimi", "mcp", "agent", "агент", "финтех", "bigtech"]
+}

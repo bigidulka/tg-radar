@@ -1,0 +1,17 @@
+{
+  "pain_terms": {
+    "complaint": ["бесит", "болит", "проблем", "сложно", "непонятн", "не работает", "ломаетс", "ошибк", "устал", "задолбал", "тупит", "лага", "дорог", "нет нормальн", "pain", "problem", "broken", "bug", "issue", "fail", "expensive", "hard", "confusing"],
+    "question": ["?", "как ", "что делать", "кто использ", "подскаж", "посовет", "есть ли", "how to", "what to", "anyone", "recommend"],
+    "workaround": ["обошел", "обошёл", "костыл", "workaround", "решил", "фикс", "починил", "заменил", "альтернатив", "instead", "fixed", "solved"],
+    "recommendation": ["советую", "рекоменд", "лучше ", "топ ", "must have", "recommend"],
+    "pricing": ["цен", "стоим", "подписк", "тариф", "лимит", "$", "₽", "руб", "price", "pricing", "subscription", "limit"],
+    "comparison": ["лучше чем", "хуже чем", "vs", "versus", "сравн", "аналог", "альтернатив"]
+  },
+  "context_terms": {
+    "vibe_coding": ["vibe cod", "вайбкод", "cursor", "windsurf", "copilot", "claude", "fable", "agent", "кодинг", "ide"],
+    "ai_agents": ["agent", "агент", "mcp", "rag", "llm", "tool calling", "workflow", "автоматизац"],
+    "legal_ai": ["legaltech", "lawtech", "юрист", "правов", "договор", "суд", "152-фз", "персональн", "данн"]
+  },
+  "first_person_terms": ["я", "мы", "у нас", "мне", "нам", "our", "we", "i"],
+  "highlight_terms": ["?", "проблем", "сложно", "дорог", "не работает"]
+}

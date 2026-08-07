@@ -1,0 +1,8 @@
+{
+  "jina_google_expand_queries": [
+    "site:t.me/s {keyword}",
+    "site:t.me {keyword}",
+    "\"t.me/s\" {keyword}",
+    "{keyword} Telegram канал"
+  ]
+}

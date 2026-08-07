@@ -1,0 +1,22 @@
+{
+  "catalog": {
+    "takeaway_prefix": "**Вывод:**",
+    "heading_separator": "—",
+    "skip_prefixes": ["---", ">"]
+  },
+  "notes": {
+    "no_signals": "нет сигналов свежее {window} дн. — расширьте окно или запустите краул",
+    "no_pairs": "совпадений нет: ни один сигнал не покрыт кейсом с собственным доказательством"
+  },
+  "cli": {
+    "header": "тема: {topic}   окно: {window} дн.   кейсов в каталоге: {cases}",
+    "counters": "сигналов рассмотрено: {considered}   дали пару: {matched}   пар: {pairs}",
+    "note": "! {text}",
+    "case": "кейс {number}. {title}",
+    "meta": "  формат: {format}   уверенность: {confidence}",
+    "wave": "  волна: {signals} сигналов из {channels} каналов ({names})",
+    "signal": "  сигнал: @{channel} {posted} {url}",
+    "gist": "    {text}",
+    "you_add": "  ты добавляешь: {text}"
+  }
+}

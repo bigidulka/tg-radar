@@ -1,0 +1,143 @@
+services:
+  frontend:
+    image: node:22-alpine
+    working_dir: /app
+    command: sh -c "npm install && npm run dev -- --host 0.0.0.0"
+    environment:
+      TG_RADAR_UI_API_TARGET: http://api:8080
+      VITE_TG_RADAR_API_TOKEN: ${VITE_TG_RADAR_API_TOKEN:-}
+    ports:
+      - "${TG_RADAR_FRONTEND_PORT:-18082}:18082"
+    volumes:
+      - ./frontend:/app
+    depends_on:
+      - api
+
+  api:
+    build: .
+    environment:
+      TG_RADAR_DATABASE_URL: postgresql+asyncpg://tg_radar:tg_radar@postgres:5432/tg_radar
+      TG_RADAR_VESPA_ENDPOINT: http://vespa:8080
+      TG_RADAR_OPEN_WEBSEARCH_URL: http://open-websearch:3000
+      TG_RADAR_TELETHON_ENABLED: "false"
+      TG_RADAR_TELETHON_HOME: /app/.pi-telethon
+      TG_RADAR_TELETHON_PROFILE: bigidulka2
+      TG_RADAR_AUTO_WORKER_ENABLED: "false"
+      TG_RADAR_AGENT_RUN_WORKER_ENABLED: "false"
+      TG_RADAR_API_TOKEN: ${TG_RADAR_API_TOKEN:-}
+      TG_RADAR_PUBLIC_METRICS: ${TG_RADAR_PUBLIC_METRICS:-false}
+      TG_RADAR_REQUESTS_PER_SECOND: ${TG_RADAR_REQUESTS_PER_SECOND:-3}
+      TG_RADAR_AGENT_RUNTIME_PROVIDER: ${TG_RADAR_AGENT_RUNTIME_PROVIDER:-openai_compatible}
+      TG_RADAR_LLM_BASE_URL: ${TG_RADAR_LLM_BASE_URL:-}
+      TG_RADAR_LLM_API_KEY: ${TG_RADAR_LLM_API_KEY:-}
+    env_file:
+      - path: .env
+        required: false
+    ports:
+      - "${TG_RADAR_API_PORT:-18081}:8080"
+    depends_on:
+      - postgres
+      - vespa
+      - open-websearch
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8080/health', timeout=3).read()"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+
+  worker:
+    build: .
+    command: ["tg-radar-worker"]
+    environment:
+      TG_RADAR_DATABASE_URL: postgresql+asyncpg://tg_radar:tg_radar@postgres:5432/tg_radar
+      TG_RADAR_VESPA_ENDPOINT: http://vespa:8080
+      TG_RADAR_OPEN_WEBSEARCH_URL: http://open-websearch:3000
+      TG_RADAR_TELETHON_ENABLED: "false"
+      TG_RADAR_TELETHON_HOME: /app/.pi-telethon
+      TG_RADAR_TELETHON_PROFILE: bigidulka2
+      TG_RADAR_AUTO_WORKER_ENABLED: "true"
+      TG_RADAR_AGENT_RUN_WORKER_ENABLED: "true"
+      TG_RADAR_API_TOKEN: ${TG_RADAR_API_TOKEN:-}
+      TG_RADAR_PUBLIC_METRICS: ${TG_RADAR_PUBLIC_METRICS:-false}
+      TG_RADAR_AGENT_RUNTIME_PROVIDER: ${TG_RADAR_AGENT_RUNTIME_PROVIDER:-openai_compatible}
+      TG_RADAR_LLM_BASE_URL: ${TG_RADAR_LLM_BASE_URL:-}
+      TG_RADAR_LLM_API_KEY: ${TG_RADAR_LLM_API_KEY:-}
+    env_file:
+      - path: .env
+        required: false
+    depends_on:
+      - postgres
+      - vespa
+      - open-websearch
+
+  bot:
+    build: .
+    command: ["tg-radar-bot"]
+    environment:
+      TG_RADAR_BOT_TOKEN: ${TG_RADAR_BOT_TOKEN:-}
+      TG_RADAR_BOT_API_BASE_URL: http://api:8080
+      TG_RADAR_BOT_STATE_PATH: /app/var/bot/airbot.sqlite3
+      TG_RADAR_BOT_GENERATED_IMAGES_PATH: /app/var/bot/generated_images
+      TG_RADAR_BOT_GENERATED_IMAGES_BASE_URL: ${TG_RADAR_BOT_GENERATED_IMAGES_BASE_URL:-}
+      TG_RADAR_BOT_IMAGE_MODEL: ${TG_RADAR_BOT_IMAGE_MODEL:-gpt-image-2}
+      TG_RADAR_BOT_IMAGE_SIZE: ${TG_RADAR_BOT_IMAGE_SIZE:-1024x1024}
+      TG_RADAR_API_TOKEN: ${TG_RADAR_API_TOKEN:-}
+      TG_RADAR_LLM_BASE_URL: ${TG_RADAR_LLM_BASE_URL:-}
+      TG_RADAR_LLM_API_KEY: ${TG_RADAR_LLM_API_KEY:-}
+      TG_RADAR_LLM_MODEL: ${TG_RADAR_LLM_MODEL:-gpt-5.5}
+      TG_RADAR_BOT_HTTP_TIMEOUT_SECONDS: ${TG_RADAR_BOT_HTTP_TIMEOUT_SECONDS:-180}
+      TG_RADAR_BOT_LLM_CHUNK_CONCURRENCY: ${TG_RADAR_BOT_LLM_CHUNK_CONCURRENCY:-1}
+      TG_RADAR_BOT_LLM_GLOBAL_CONCURRENCY: ${TG_RADAR_BOT_LLM_GLOBAL_CONCURRENCY:-1}
+    env_file:
+      - path: .env
+        required: false
+    volumes:
+      - bot_data:/app/var/bot
+      - ./tmp/leaderboard_images:/app/var/bot/generated_images
+    depends_on:
+      - api
+
+  open-websearch:
+    image: ghcr.io/aas-ee/open-web-search:latest
+    environment:
+      NODE_ENV: production
+      MODE: http
+      PORT: "3000"
+      DEFAULT_SEARCH_ENGINE: startpage
+      ALLOWED_SEARCH_ENGINES: startpage,duckduckgo
+      SEARCH_MODE: request
+      ENABLE_CORS: "true"
+      CORS_ORIGIN: "*"
+    command: ["node", "build/index.js", "serve", "--host", "0.0.0.0", "--port", "3000"]
+    ports:
+      - "3210:3000"
+
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: tg_radar
+      POSTGRES_USER: tg_radar
+      POSTGRES_PASSWORD: tg_radar
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  vespa:
+    image: vespaengine/vespa:8
+    hostname: vespa
+    ports:
+      - "8081:8080"
+      - "19071:19071"
+    volumes:
+      - ./vespa:/app
+    entrypoint: ["/bin/sh", "-c"]
+    command: >
+      "/usr/local/bin/start-container.sh &
+      until curl -fsS http://localhost:19071/state/v1/health >/dev/null; do sleep 2; done;
+      vespa deploy /app;
+      wait"
+
+volumes:
+  postgres_data:
+  bot_data:

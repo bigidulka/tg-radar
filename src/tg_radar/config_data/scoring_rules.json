@@ -1,0 +1,22 @@
+{
+  "company_terms": {
+    "sber": ["сбер", "sber", "sberbank", "сбертех", "giga chat", "gigachat", "giga code", "gigacode"],
+    "yandex": ["яндекс", "yandex", "ya.ru", "yandex cloud"]
+  },
+  "ai_terms": ["ai", "ml", "llm", "nlp", "genai", "rag", "agent", "agents", "агент", "агенты", "ии", "машинн", "обучен", "нейро", "gpt", "gigachat", "gigacode", "llama", "bert", "transformer", "data science"],
+  "hiring_terms": ["нанима", "ищ", "ваканси", "работ", "hiring", "hire", "job", "vacancy", "opening", "developer", "engineer", "разработчик", "инженер", "тимлид", "team lead", "backend", "python", "go", "java", "ml engineer", "data scientist"],
+  "contact_terms": ["mailto:", "hr", "рекрутер", "recruiter", "написать", "пишите", "contact", "apply"],
+  "highlight_terms": ["ai", "llm", "ии", "разработчик", "инженер", "вакансия", "нанима"],
+  "source_trust": {
+    "seed": 0.95,
+    "telethon_recursive": 0.9,
+    "telethon": 0.9,
+    "similar": 0.88,
+    "open_websearch": 0.82,
+    "jina_google": 0.8,
+    "telemetr": 0.78,
+    "lyzem": 0.74,
+    "tgstat": 0.72,
+    "linked": 0.68
+  }
+}

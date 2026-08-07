@@ -1,0 +1,14 @@
+.venv
+.pytest_cache
+.ralph
+__pycache__
+*.pyc
+*.pyo
+*.pyd
+.mypy_cache
+.ruff_cache
+tmp
+frontend/node_modules
+frontend/dist
+frontend/tsconfig.tsbuildinfo
+src/tg_radar.egg-info

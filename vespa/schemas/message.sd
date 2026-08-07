@@ -1,0 +1,77 @@
+schema message {
+  document message {
+    field message_id type string {
+      indexing: summary | attribute
+      attribute: fast-search
+    }
+    field channel_username type string {
+      indexing: summary | attribute
+      attribute: fast-search
+    }
+    field channel_title type string {
+      indexing: summary | index
+    }
+    field posted_at type long {
+      indexing: summary | attribute
+      attribute: fast-search
+    }
+    field text type string {
+      indexing: summary | index
+      index: enable-bm25
+    }
+    field links type array<string> {
+      indexing: summary | attribute
+    }
+    field mentions type array<string> {
+      indexing: summary | attribute
+    }
+    field embedding type tensor<float>(x[1024]) {
+      indexing: attribute | index
+      attribute {
+        distance-metric: angular
+      }
+      index {
+        hnsw {
+          max-links-per-node: 16
+          neighbors-to-explore-at-insert: 200
+        }
+      }
+    }
+    field quality_score type double {
+      indexing: summary | attribute
+    }
+    field vacancy_key type string {
+      indexing: summary | attribute
+      attribute: fast-search
+    }
+    field detector_score type double {
+      indexing: summary | attribute
+    }
+    field detector_reasons type array<string> {
+      indexing: summary | attribute
+    }
+  }
+
+  fieldset default {
+    fields: channel_title, text
+  }
+
+  rank-profile bm25 inherits default {
+    first-phase {
+      expression: bm25(text)
+    }
+  }
+
+  rank-profile hybrid inherits default {
+    inputs {
+      query(q_embedding) tensor<float>(x[1024])
+    }
+    first-phase {
+      expression: bm25(text) + 0.35 * closeness(field, embedding) + 0.15 * attribute(quality_score) + 0.25 * attribute(detector_score)
+    }
+    second-phase {
+      rerank-count: 100
+      expression: firstPhase
+    }
+  }
+}

@@ -1,0 +1,50 @@
+[
+  {
+    "elo": 500,
+    "file": "500_elo_fortochny_skvoznyak.png",
+    "source": "/mnt/data/ghostwriter_images/generated/a_detailed_fantasy_tech_style_ui_background_scene_1.png",
+    "usage": "background/backplate only; add text/UI overlays separately"
+  },
+  {
+    "elo": 1000,
+    "file": "1000_elo_raionny_vozduhan.png",
+    "source": "/mnt/data/ghostwriter_images/generated/a_decorative_fantasy_ornamental_background_scene_2_batch_1.png",
+    "usage": "background/backplate only; add text/UI overlays separately"
+  },
+  {
+    "elo": 1500,
+    "file": "1500_elo_haboob_argumentov.png",
+    "source": "/mnt/data/ghostwriter_images/generated/a_detailed_fantasy_ornamental_background_scene_a_3_batch_2.png",
+    "usage": "background/backplate only; add text/UI overlays separately"
+  },
+  {
+    "elo": 2000,
+    "file": "2000_elo_uragan_3_kategorii.png",
+    "source": "/mnt/data/ghostwriter_images/generated/a_full_frame_vertical_fantasy_storm_vortex_bac_4_batch_3.png",
+    "usage": "background/backplate only; add text/UI overlays separately"
+  },
+  {
+    "elo": 2500,
+    "file": "2500_elo_tip_870.png",
+    "source": "/mnt/data/ghostwriter_images/generated/a_highly_detailed_fantasy_sci_fi_storm_vortex_back_5_batch_4.png",
+    "usage": "background/backplate only; add text/UI overlays separately"
+  },
+  {
+    "elo": 3000,
+    "file": "3000_elo_planetarny_anticyklon.png",
+    "source": "/mnt/data/ghostwriter_images/generated/a_high_resolution_fantasy_space_themed_ornate_card_6_batch_5.png",
+    "usage": "background/backplate only; add text/UI overlays separately"
+  },
+  {
+    "elo": 3500,
+    "file": "3500_elo_koronalny_vybros.png",
+    "source": "/mnt/data/ghostwriter_images/generated/a_highly_detailed_fantasy_space_themed_background_7_batch_6.png",
+    "usage": "background/backplate only; add text/UI overlays separately"
+  },
+  {
+    "elo": 4000,
+    "file": "4000_elo_singulyarnost_vozduhana.png",
+    "source": "/mnt/data/ghostwriter_images/generated/a_high_resolution_fantasy_sci_fi_cosmic_background_8_batch_7.png",
+    "usage": "background/backplate only; add text/UI overlays separately"
+  }
+]

@@ -1,0 +1,314 @@
+{
+  "mcp_bridge": {
+    "tools": []
+  },
+  "native_dev_tools": {
+    "exclude_dirs": [
+      ".git",
+      ".pytest_cache",
+      ".venv",
+      "__pycache__",
+      "dist",
+      "node_modules"
+    ],
+    "default_max_chars": 12000,
+    "default_max_entries": 200,
+    "default_max_matches": 50,
+    "max_file_bytes": 200000,
+    "state_dir": ".tg-radar-agent",
+    "memory_file": "memory.json",
+    "tasks_file": "tasks.json",
+    "checkpoint_dir": "checkpoints",
+    "max_checkpoint_file_bytes": 200000,
+    "protected_paths": [
+      ".env",
+      ".env.local",
+      ".git",
+      ".venv"
+    ],
+    "blocked_shell_commands": [
+      "bash",
+      "fish",
+      "rm",
+      "scp",
+      "sh",
+      "ssh",
+      "sudo",
+      "zsh"
+    ],
+    "commands": {
+      "git_status": ["git", "status", "--short"],
+      "git_diff": ["git", "diff", "--"],
+      "run_tests": [".venv/bin/python", "-m", "pytest"]
+    },
+    "tools": [
+      {
+        "name": "list_files",
+        "description": "List workspace files with configured exclusions.",
+        "risk_level": "safe",
+        "danger_level": "safe",
+        "allowed_phases": ["understand", "plan", "edit", "verify", "fix", "finalize"],
+        "timeout_sec": 5,
+        "args_schema": {
+          "type": "object",
+          "properties": {
+            "path": {"type": "string"},
+            "max_entries": {"type": "integer", "minimum": 1, "maximum": 2000}
+          }
+        }
+      },
+      {
+        "name": "read_file",
+        "description": "Read a workspace file within configured size limits.",
+        "risk_level": "safe",
+        "danger_level": "safe",
+        "allowed_phases": ["understand", "plan", "edit", "verify", "fix", "finalize"],
+        "timeout_sec": 5,
+        "args_schema": {
+          "type": "object",
+          "properties": {
+            "path": {"type": "string"},
+            "max_chars": {"type": "integer", "minimum": 1, "maximum": 200000}
+          },
+          "required": ["path"]
+        }
+      },
+      {
+        "name": "search_text",
+        "description": "Search workspace text files by plain substring.",
+        "risk_level": "safe",
+        "danger_level": "safe",
+        "allowed_phases": ["understand", "plan", "edit", "verify", "fix"],
+        "timeout_sec": 10,
+        "args_schema": {
+          "type": "object",
+          "properties": {
+            "query": {"type": "string"},
+            "path": {"type": "string"},
+            "max_matches": {"type": "integer", "minimum": 1, "maximum": 1000}
+          },
+          "required": ["query"]
+        }
+      },
+      {
+        "name": "search_symbols",
+        "description": "Search Python classes and functions by plain substring.",
+        "risk_level": "safe",
+        "danger_level": "safe",
+        "allowed_phases": ["understand", "plan", "edit", "verify", "fix"],
+        "timeout_sec": 10,
+        "args_schema": {
+          "type": "object",
+          "properties": {
+            "query": {"type": "string"},
+            "path": {"type": "string"},
+            "max_matches": {"type": "integer", "minimum": 1, "maximum": 1000}
+          },
+          "required": ["query"]
+        }
+      },
+      {
+        "name": "memory_read",
+        "description": "Read project-local agent memory entries.",
+        "risk_level": "safe",
+        "danger_level": "safe",
+        "allowed_phases": ["understand", "plan", "edit", "verify", "fix", "finalize"],
+        "timeout_sec": 5,
+        "args_schema": {
+          "type": "object",
+          "properties": {
+            "key": {"type": "string"},
+            "max_items": {"type": "integer", "minimum": 1, "maximum": 200}
+          }
+        }
+      },
+      {
+        "name": "memory_write",
+        "description": "Write a project-local agent memory entry.",
+        "risk_level": "write",
+        "danger_level": "write",
+        "side_effects": true,
+        "allowed_phases": ["plan", "edit", "fix", "finalize"],
+        "timeout_sec": 5,
+        "args_schema": {
+          "type": "object",
+          "properties": {
+            "key": {"type": "string"},
+            "value": {},
+            "tags": {
+              "type": "array",
+              "items": {"type": "string"}
+            }
+          },
+          "required": ["key", "value"]
+        }
+      },
+      {
+        "name": "task_tracker",
+        "description": "Read or update project-local agent task state.",
+        "risk_level": "write",
+        "danger_level": "write",
+        "side_effects": true,
+        "allowed_phases": ["plan", "edit", "fix", "finalize"],
+        "timeout_sec": 5,
+        "args_schema": {
+          "type": "object",
+          "properties": {
+            "action": {"type": "string"},
+            "id": {"type": "string"},
+            "title": {"type": "string"},
+            "status": {"type": "string"},
+            "notes": {"type": "string"},
+            "max_items": {"type": "integer", "minimum": 1, "maximum": 200}
+          },
+          "required": ["action"]
+        }
+      },
+      {
+        "name": "checkpoint_create",
+        "description": "Create a project-local checkpoint snapshot.",
+        "risk_level": "write",
+        "danger_level": "write",
+        "side_effects": true,
+        "allowed_phases": ["plan", "edit", "fix", "finalize"],
+        "timeout_sec": 30,
+        "args_schema": {
+          "type": "object",
+          "properties": {
+            "id": {"type": "string"},
+            "paths": {
+              "type": "array",
+              "items": {"type": "string"}
+            },
+            "metadata": {"type": "object"}
+          }
+        }
+      },
+      {
+        "name": "checkpoint_list",
+        "description": "List project-local checkpoint snapshots.",
+        "risk_level": "safe",
+        "danger_level": "safe",
+        "allowed_phases": ["understand", "plan", "edit", "verify", "fix", "finalize"],
+        "timeout_sec": 5,
+        "args_schema": {"type": "object", "properties": {}}
+      },
+      {
+        "name": "checkpoint_restore",
+        "description": "Restore files from a project-local checkpoint after approval.",
+        "risk_level": "write",
+        "danger_level": "write",
+        "side_effects": true,
+        "requires_approval": true,
+        "allowed_phases": ["fix"],
+        "timeout_sec": 30,
+        "args_schema": {
+          "type": "object",
+          "properties": {
+            "id": {"type": "string"}
+          },
+          "required": ["id"]
+        }
+      },
+      {
+        "name": "write_file",
+        "description": "Write a workspace file after policy approval.",
+        "risk_level": "write",
+        "danger_level": "write",
+        "side_effects": true,
+        "requires_approval": true,
+        "allowed_phases": ["edit", "fix"],
+        "timeout_sec": 10,
+        "args_schema": {
+          "type": "object",
+          "properties": {
+            "path": {"type": "string"},
+            "content": {"type": "string"},
+            "create_dirs": {"type": "boolean"}
+          },
+          "required": ["path", "content"]
+        }
+      },
+      {
+        "name": "apply_patch",
+        "description": "Replace exact text in a workspace file after policy approval.",
+        "risk_level": "write",
+        "danger_level": "write",
+        "side_effects": true,
+        "requires_approval": true,
+        "allowed_phases": ["edit", "fix"],
+        "timeout_sec": 10,
+        "args_schema": {
+          "type": "object",
+          "properties": {
+            "path": {"type": "string"},
+            "old_text": {"type": "string"},
+            "new_text": {"type": "string"},
+            "max_replacements": {"type": "integer", "minimum": 1, "maximum": 100}
+          },
+          "required": ["path", "old_text", "new_text"]
+        }
+      },
+      {
+        "name": "git_status",
+        "description": "Read concise git status for the workspace.",
+        "risk_level": "safe",
+        "danger_level": "safe",
+        "allowed_phases": ["understand", "plan", "edit", "verify", "fix", "finalize"],
+        "timeout_sec": 10,
+        "args_schema": {"type": "object", "properties": {}}
+      },
+      {
+        "name": "git_diff",
+        "description": "Read git diff for the workspace or one workspace path.",
+        "risk_level": "safe",
+        "danger_level": "safe",
+        "allowed_phases": ["understand", "plan", "edit", "verify", "fix", "finalize"],
+        "timeout_sec": 10,
+        "args_schema": {
+          "type": "object",
+          "properties": {
+            "path": {"type": "string"},
+            "max_chars": {"type": "integer", "minimum": 1, "maximum": 200000}
+          }
+        }
+      },
+      {
+        "name": "run_shell",
+        "description": "Run a workspace command without a shell after policy approval.",
+        "risk_level": "shell",
+        "danger_level": "shell",
+        "side_effects": true,
+        "requires_approval": true,
+        "allowed_phases": ["edit", "verify", "fix"],
+        "timeout_sec": 60,
+        "args_schema": {
+          "type": "object",
+          "properties": {
+            "command": {
+              "type": "array",
+              "items": {"type": "string"},
+              "minItems": 1
+            },
+            "max_chars": {"type": "integer", "minimum": 1, "maximum": 200000}
+          },
+          "required": ["command"]
+        }
+      },
+      {
+        "name": "run_tests",
+        "description": "Run the configured project test command.",
+        "risk_level": "shell",
+        "danger_level": "shell",
+        "allowed_phases": ["verify", "fix", "finalize"],
+        "timeout_sec": 120,
+        "args_schema": {
+          "type": "object",
+          "properties": {
+            "max_chars": {"type": "integer", "minimum": 1, "maximum": 200000}
+          }
+        }
+      }
+    ]
+  }
+}

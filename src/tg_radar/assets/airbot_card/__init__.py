@@ -1,0 +1,1 @@
+"""Airbot HTML card assets."""
