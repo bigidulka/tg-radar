@@ -1,7 +1,7 @@
 from datetime import datetime, timedelta, timezone
 from typing import AsyncIterator
 
-from sqlalchemy import BigInteger, Boolean, DateTime, Float, ForeignKey, Integer, String, Text, UniqueConstraint, func, select, text as sql_text
+from sqlalchemy import BigInteger, Boolean, DateTime, Float, ForeignKey, Index, Integer, String, Text, UniqueConstraint, func, select, text as sql_text
 from sqlalchemy.dialects.postgresql import ARRAY, JSONB
 from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession, async_sessionmaker, create_async_engine
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
@@ -20,6 +20,7 @@ class Base(DeclarativeBase):
 
 class Channel(Base):
     __tablename__ = "channels"
+    __table_args__ = (Index("uq_channels_username_lower", sql_text("lower(username)"), unique=True),)
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
     username: Mapped[str] = mapped_column(String(32), unique=True, index=True)
@@ -144,6 +145,7 @@ class SearchTask(Base):
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
     name: Mapped[str] = mapped_column(String(128), unique=True, index=True)
+    topic_slug: Mapped[str | None] = mapped_column(String(128), index=True)
     keywords: Mapped[list[str]] = mapped_column(ARRAY(String), default=list)
     seed_channels: Mapped[list[str]] = mapped_column(ARRAY(String), default=list)
     auto_tune: Mapped[bool] = mapped_column(Boolean, default=True)
@@ -401,6 +403,8 @@ async def _ensure_compat_schema(conn) -> None:
         "ALTER TABLE search_tasks ADD COLUMN IF NOT EXISTS crawl_mode VARCHAR(32) DEFAULT 'backfill' NOT NULL",
         "ALTER TABLE search_tasks ADD COLUMN IF NOT EXISTS freshness_days INTEGER",
         "ALTER TABLE search_tasks ADD COLUMN IF NOT EXISTS running_started_at TIMESTAMP WITH TIME ZONE",
+        "ALTER TABLE search_tasks ADD COLUMN IF NOT EXISTS topic_slug VARCHAR(128)",
+        "CREATE INDEX IF NOT EXISTS idx_search_tasks_topic_slug ON search_tasks (topic_slug)",
         """
         CREATE TABLE IF NOT EXISTS agent_runs (
             run_id VARCHAR(128) PRIMARY KEY,
@@ -477,7 +481,7 @@ async def session_scope(factory: async_sessionmaker[AsyncSession]) -> AsyncItera
 
 async def upsert_channel(session: AsyncSession, username: str, title: str | None, source: str) -> Channel:
     username = username.strip("@")
-    existing = await session.scalar(select(Channel).where(Channel.username == username))
+    existing = await session.scalar(select(Channel).where(func.lower(Channel.username) == username.lower()))
     if existing:
         existing.title = title or existing.title
         existing.last_seen_at = datetime.utcnow()
@@ -709,19 +713,23 @@ async def mark_refresh_missing_messages(
 
 
 async def channel_last_crawled_map(session: AsyncSession, usernames: list[str]) -> dict[str, datetime | None]:
-    cleaned = [username.strip("@") for username in usernames if username]
+    cleaned = [username.strip("@").lower() for username in usernames if username]
     if not cleaned:
         return {}
-    rows = await session.execute(select(Channel.username, Channel.last_crawled_at).where(Channel.username.in_(cleaned)))
+    rows = await session.execute(
+        select(Channel.username, Channel.last_crawled_at).where(func.lower(Channel.username).in_(cleaned))
+    )
     return {row[0].lower(): row[1] for row in rows}
 
 
 async def channel_crawl_policy_map(session: AsyncSession, usernames: list[str]) -> dict[str, tuple[datetime | None, int]]:
-    cleaned = [username.strip("@") for username in usernames if username]
+    cleaned = [username.strip("@").lower() for username in usernames if username]
     if not cleaned:
         return {}
     rows = await session.execute(
-        select(Channel.username, Channel.last_crawled_at, Channel.crawl_interval_seconds).where(Channel.username.in_(cleaned))
+        select(Channel.username, Channel.last_crawled_at, Channel.crawl_interval_seconds).where(
+            func.lower(Channel.username).in_(cleaned)
+        )
     )
     return {row[0].lower(): (row[1], int(row[2] or 0)) for row in rows}
 
@@ -747,7 +755,7 @@ async def add_edges_for_message(session: AsyncSession, channel: Channel, message
 
 
 async def add_channel_edge(session: AsyncSession, src_username: str, dst_username: str, edge_type: EdgeType = EdgeType.link) -> None:
-    src = await session.scalar(select(Channel).where(Channel.username == src_username.strip("@")))
+    src = await session.scalar(select(Channel).where(func.lower(Channel.username) == src_username.strip("@").lower()))
     dst = dst_username.strip("@")
     if not src or not dst or src.username.lower() == dst.lower():
         return
@@ -769,7 +777,7 @@ async def upsert_discovered_channel(session: AsyncSession, candidate: ChannelCan
     resolved_task_name = task_name or candidate.task_name
     existing = await session.scalar(
         select(DiscoveredChannel).where(
-            DiscoveredChannel.username == candidate.username,
+            func.lower(DiscoveredChannel.username) == candidate.username.strip("@").lower(),
             DiscoveredChannel.source == candidate.source,
             DiscoveredChannel.reason == candidate.reason,
         )
@@ -870,6 +878,7 @@ def task_to_status(task: SearchTask) -> SearchTaskStatus:
     total_valid = getattr(task, "total_valid_candidates", 0) or 0
     return SearchTaskStatus(
         name=task.name,
+        topic_slug=getattr(task, "topic_slug", None),
         keywords=task.keywords or [],
         seed_channels=task.seed_channels or [],
         auto_tune=True if auto_tune is None else auto_tune,
@@ -906,6 +915,7 @@ async def upsert_search_task(session: AsyncSession, payload: SearchTaskRequest) 
     now = datetime.utcnow()
     task = await session.scalar(select(SearchTask).where(SearchTask.name == payload.name))
     if task:
+        task.topic_slug = payload.topic_slug
         task.keywords = payload.keywords
         task.seed_channels = payload.seed_channels
         task.auto_tune = payload.auto_tune
@@ -922,6 +932,7 @@ async def upsert_search_task(session: AsyncSession, payload: SearchTaskRequest) 
         return task
     task = SearchTask(
         name=payload.name,
+        topic_slug=payload.topic_slug,
         keywords=payload.keywords,
         seed_channels=payload.seed_channels,
         auto_tune=payload.auto_tune,
@@ -1008,6 +1019,22 @@ async def link_topic_message(session: AsyncSession, topic: ResearchTopic, messag
             intent=message.intent,
         )
     )
+
+
+async def add_topic_seed_channels(session: AsyncSession, topic: ResearchTopic, usernames: list[str]) -> list[str]:
+    """Grow the topic pool: the seed list is what the regular crawl task reads."""
+    known = {name.lower() for name in (topic.seed_channels or [])}
+    added: list[str] = []
+    for username in usernames:
+        clean = username.strip("@")
+        if not clean or clean.lower() in known:
+            continue
+        known.add(clean.lower())
+        added.append(clean)
+    if added:
+        topic.seed_channels = [*(topic.seed_channels or []), *added]
+        topic.updated_at = datetime.utcnow()
+    return added
 
 
 async def list_research_topics(session: AsyncSession) -> list[ResearchTopicStatus]:

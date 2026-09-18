@@ -35,8 +35,13 @@ class Settings(BaseSettings):
     discovery_query_cache_ttl_seconds: int = Field(default=3600, ge=0, le=86400)
     ingest_concurrency: int = Field(default=4, ge=1, le=16)
     crawl_cooldown_seconds: int = Field(default=1800, ge=0, le=86400)
+    topic_expansion_max_new_per_run: int = Field(default=5, ge=0, le=100)
+    topic_expansion_min_messages: int = Field(default=10, ge=1, le=500)
+    topic_expansion_min_quality_score: float = Field(default=0.55, ge=0.0, le=1.0)
+    topic_expansion_min_match_rate: float = Field(default=0.55, ge=0.0, le=1.0)
+    topic_expansion_min_pain_score: float = Field(default=0.45, ge=0.0, le=1.0)
     auto_worker_interval_seconds: float = Field(default=60.0, ge=5, le=3600)
-    auto_task_timeout_seconds: float = Field(default=180.0, ge=30, le=3600)
+    auto_task_timeout_seconds: float = Field(default=600.0, ge=30, le=3600)
     auto_worker_enabled: bool = True
     agent_run_worker_enabled: bool = True
     agent_run_worker_interval_seconds: float = Field(default=1.0, ge=0.1, le=60)

@@ -21,6 +21,47 @@ class PainSignal:
     discussion_key: str
 
 
+@dataclass(frozen=True)
+class TopicGate:
+    min_messages: int = 10
+    min_quality_score: float = 0.55
+    min_match_rate: float = 0.55
+    min_pain_score: float = 0.45
+
+
+@dataclass(frozen=True)
+class TopicAdmission:
+    accepted: bool
+    reason: str
+    match_rate: float
+    avg_pain_score: float
+
+
+def topic_admission(gate: TopicGate, seen: int, matched_pain_scores: list[float], quality_score: float) -> TopicAdmission:
+    """Decide whether a freshly crawled channel joins the topic pool.
+
+    `matched_pain_scores` holds the pain score of every crawled message that the
+    topic would link, so the two ratios come from the same rule the linking uses.
+    """
+    match_rate = len(matched_pain_scores) / seen if seen else 0.0
+    avg_pain_score = sum(matched_pain_scores) / len(matched_pain_scores) if matched_pain_scores else 0.0
+    checks = [
+        (seen >= gate.min_messages, f"topic_gate_sample:{seen}<{gate.min_messages}"),
+        (quality_score >= gate.min_quality_score, f"topic_gate_quality:{quality_score:.2f}<{gate.min_quality_score:.2f}"),
+        (match_rate >= gate.min_match_rate, f"topic_gate_match_rate:{match_rate:.2f}<{gate.min_match_rate:.2f}"),
+        (avg_pain_score >= gate.min_pain_score, f"topic_gate_pain:{avg_pain_score:.2f}<{gate.min_pain_score:.2f}"),
+    ]
+    for passed, reason in checks:
+        if not passed:
+            return TopicAdmission(accepted=False, reason=reason, match_rate=match_rate, avg_pain_score=avg_pain_score)
+    return TopicAdmission(
+        accepted=True,
+        reason=f"topic_gate_pass:rate={match_rate:.2f},pain={avg_pain_score:.2f},quality={quality_score:.2f}",
+        match_rate=match_rate,
+        avg_pain_score=avg_pain_score,
+    )
+
+
 def classify_pain(text: str, links: list[str] | None = None, mentions: list[str] | None = None) -> PainSignal:
     normalized = normalize_text(" ".join([text or "", *(links or []), *(mentions or [])]))
     reasons: list[str] = []

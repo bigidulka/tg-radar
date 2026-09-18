@@ -27,6 +27,8 @@ from tg_radar.schemas import (
     ResearchTopicStatus,
     SearchTaskRequest,
     StoryMatchReport,
+    TopicFeedItem,
+    TopicFeedResponse,
 )
 from tg_radar.story_match import StoryMatchError, match_topic_stories
 from tg_radar.topical import classify_pain, topic_relevance
@@ -141,6 +143,43 @@ async def topic_channels(slug: str, limit: int = 200, session: AsyncSession = De
             for channel, topic_channel in rows
         ],
     }
+
+
+@router.get("/topics/{slug}/feed", response_model=TopicFeedResponse)
+@router.get("/core/topics/{slug}/feed", response_model=TopicFeedResponse)
+async def topic_feed(slug: str, after_id: int = 0, limit: int = 100, session: AsyncSession = Depends(get_session)):
+    topic = await session.scalar(select(ResearchTopic).where(ResearchTopic.slug == slug))
+    if not topic:
+        raise HTTPException(status_code=404, detail="topic not found")
+    page_size = min(max(limit, 1), 500)
+    rows = (
+        await session.execute(
+            select(Message, Channel)
+            .join(TopicMessage, TopicMessage.message_id == Message.id)
+            .join(Channel, Channel.id == Message.channel_id)
+            .where(
+                TopicMessage.topic_id == topic.id,
+                Message.id > after_id,
+                Message.deleted_or_missing.is_(False),
+            )
+            .order_by(Message.id.asc())
+            .limit(page_size + 1)
+        )
+    ).all()
+    items = [
+        TopicFeedItem(
+            id=message.id,
+            channel=channel.username,
+            url=message.url,
+            text=message.text,
+            posted_at=message.posted_at,
+            views=message.views,
+            pain_score=message.pain_score,
+            tags=message.pain_reasons or [],
+        )
+        for message, channel in rows[:page_size]
+    ]
+    return TopicFeedResponse(topic=slug, items=items, next_after_id=items[-1].id if len(rows) > page_size else None)
 
 
 @router.get("/topics/{slug}/pain", response_model=PainReport)

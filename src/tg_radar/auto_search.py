@@ -6,7 +6,7 @@ from datetime import datetime, timedelta
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
-from tg_radar.db import SearchTask, TaskRun, task_to_status, upsert_search_task
+from tg_radar.db import ResearchTopic, SearchTask, TaskRun, task_to_status, upsert_search_task
 from tg_radar.schemas import IngestResponse, SearchTaskRequest, SearchTaskRunResponse, SearchTaskStatus
 from tg_radar.service import IngestService
 
@@ -23,6 +23,20 @@ def auto_policy(task: SearchTask) -> tuple[int, int, int, int]:
     if task.last_channels_crawled == 0:
         return 0, 30, 1, 300
     return 1, 40, 1, 300
+
+
+def empty_run_error(ingest) -> str | None:
+    """Why a run that found no candidates failed, or None if it simply found none.
+
+    Finding nothing is a result, not a failure: only the source reporting an
+    error is one. This used to synthesise an error whenever the candidate count
+    was zero, which made a healthy run look broken -- and got worse as coverage
+    improved, because a well-covered topic legitimately returns zero new
+    candidates most of the time.
+    """
+    if ingest is None or ingest.candidates_found or not ingest.errors:
+        return None
+    return "; ".join(ingest.errors[:3])
 
 
 class AutoSearchEngine:
@@ -144,8 +158,10 @@ class AutoSearchEngine:
                 current.interval_seconds = interval_seconds
                 crawl_mode = current.crawl_mode or "backfill"
                 freshness_days = current.freshness_days
-                keywords = current.keywords or []
-                seed_channels = current.seed_channels or []
+                topic_slug = current.topic_slug or current.name
+                topic = await session.scalar(select(ResearchTopic).where(ResearchTopic.slug == topic_slug))
+                keywords = current.keywords or (topic.keywords if topic else None) or []
+                seed_channels = current.seed_channels or (topic.seed_channels if topic else None) or []
                 crawl = current.crawl
                 task_run = TaskRun(task_name=current.name, status="running", ingest_stats={})
                 session.add(task_run)
@@ -165,6 +181,7 @@ class AutoSearchEngine:
             task_name=task.name,
             crawl_mode=crawl_mode,
             freshness_days=freshness_days,
+            topic_slug=topic_slug,
         )
 
         async with self.sessionmaker() as session:
@@ -175,8 +192,8 @@ class AutoSearchEngine:
                 updated.running = False
                 updated.running_started_at = None
                 updated.last_run_at = datetime.utcnow()
-                if not error and ingest and ingest.candidates_found == 0:
-                    error = "; ".join(ingest.errors[:3]) or "zero candidates after keyword expansion"
+                if not error:
+                    error = empty_run_error(ingest)
                 updated.last_error = error
                 updated.total_runs += 1
                 if ingest:
@@ -221,6 +238,7 @@ class AutoSearchEngine:
         task_name: str,
         crawl_mode: str,
         freshness_days: int | None,
+        topic_slug: str,
     ) -> tuple[IngestResponse | None, str | None, str]:
         attempts = 0
         last_error: str | None = None
@@ -238,6 +256,7 @@ class AutoSearchEngine:
                         task_name,
                         crawl_mode=crawl_mode,
                         freshness_days=freshness_days,
+                        topic_slug=topic_slug,
                     ),
                     timeout=self.task_timeout_seconds,
                 )

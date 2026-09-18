@@ -15,6 +15,7 @@ from tg_radar.reranker import Reranker
 from tg_radar.search_providers import make_search_provider
 from tg_radar.service import IndexingService, IngestService
 from tg_radar.telethon_user import TelethonUserClient
+from tg_radar.topical import TopicGate
 from tg_radar.vespa import VespaClient
 
 
@@ -58,6 +59,13 @@ def build_state(settings: Settings | None = None) -> AppState:
         state.sessionmaker,
         resolved.ingest_concurrency,
         resolved.crawl_cooldown_seconds,
+        TopicGate(
+            min_messages=resolved.topic_expansion_min_messages,
+            min_quality_score=resolved.topic_expansion_min_quality_score,
+            min_match_rate=resolved.topic_expansion_min_match_rate,
+            min_pain_score=resolved.topic_expansion_min_pain_score,
+        ),
+        resolved.topic_expansion_max_new_per_run,
     )
     state.auto_search = AutoSearchEngine(
         state.sessionmaker,

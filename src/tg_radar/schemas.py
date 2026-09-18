@@ -1,7 +1,7 @@
-from datetime import datetime
+from datetime import datetime, timezone
 from enum import StrEnum
 
-from pydantic import BaseModel, Field, field_validator
+from pydantic import BaseModel, Field, field_serializer, field_validator
 
 
 class ChannelStatus(StrEnum):
@@ -17,6 +17,7 @@ class CandidateState(StrEnum):
     validated_channel = "validated_channel"
     indexed_channel = "indexed_channel"
     rejected_user_or_bot = "rejected_user_or_bot"
+    rejected_low_quality = "rejected_low_quality"
     empty_public = "empty_public"
 
 
@@ -56,6 +57,18 @@ class ParsedPage(BaseModel):
     channel_title: str | None = None
     messages: list[ParsedMessage]
     next_before: int | None = None
+
+
+class CrawlResult(BaseModel):
+    saved: list[ParsedMessage] = Field(default_factory=list)
+    seen: list[ParsedMessage] = Field(default_factory=list)
+    deleted_or_missing_marked: int = 0
+
+    @property
+    def channel_reachable(self) -> bool:
+        """An empty page means an empty, deleted or non-public channel; an empty
+        `saved` with a non-empty page only means the crawl added nothing new."""
+        return bool(self.seen)
 
 
 class ChannelCandidate(BaseModel):
@@ -176,6 +189,8 @@ class IngestResponse(BaseModel):
     source_count: int = 0
     message_count: int = 0
     deleted_or_missing_marked: int = 0
+    admitted_channels: list[str] = Field(default_factory=list)
+    rejected_channels: list[str] = Field(default_factory=list)
 
 
 class CollectionAgentMode(StrEnum):
@@ -267,6 +282,7 @@ class AgentRunStatusResponse(BaseModel):
 
 class SearchTaskRequest(BaseModel):
     name: str = "default"
+    topic_slug: str | None = None
     keywords: list[str] = Field(default_factory=list)
     seed_channels: list[str] = Field(default_factory=list)
     auto_tune: bool = True
@@ -282,6 +298,7 @@ class SearchTaskRequest(BaseModel):
 
 class SearchTaskStatus(BaseModel):
     name: str
+    topic_slug: str | None = None
     keywords: list[str]
     seed_channels: list[str]
     auto_tune: bool = True
@@ -377,6 +394,30 @@ class ResearchTopicStatus(BaseModel):
     pain_items: int = 0
     avg_pain_score: float = 0.0
     updated_at: datetime | None = None
+
+
+class TopicFeedItem(BaseModel):
+    id: int
+    channel: str
+    url: str
+    text: str
+    posted_at: datetime | None = None
+    views: int | None = None
+    pain_score: float | None = None
+    tags: list[str] = Field(default_factory=list)
+
+    @field_serializer("posted_at")
+    def serialize_posted_at(self, value: datetime | None) -> str | None:
+        if not value:
+            return None
+        moment = value.astimezone(timezone.utc) if value.tzinfo else value
+        return moment.strftime("%Y-%m-%dT%H:%M:%SZ")
+
+
+class TopicFeedResponse(BaseModel):
+    topic: str
+    items: list[TopicFeedItem] = Field(default_factory=list)
+    next_after_id: int | None = None
 
 
 class PainInsight(BaseModel):
