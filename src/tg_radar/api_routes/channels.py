@@ -123,8 +123,13 @@ async def crawl_channel(
 ):
     if pages < 1 or pages > 20:
         raise HTTPException(status_code=400, detail="pages must be between 1 and 20")
-    messages, deleted_or_missing_marked = await state.indexing.crawl_and_index(session, username, pages=pages, crawl_mode="refresh")
-    return {"channel": username.strip("@"), "messages": len(messages), "deleted_or_missing_marked": deleted_or_missing_marked}
+    result = await state.indexing.crawl_and_index(session, username, pages=pages, crawl_mode="refresh")
+    return {
+        "channel": username.strip("@"),
+        "messages": len(result.saved),
+        "seen": len(result.seen),
+        "deleted_or_missing_marked": result.deleted_or_missing_marked,
+    }
 
 
 @router.get("/core/channels/{username}")

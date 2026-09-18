@@ -11,7 +11,18 @@ from tg_radar.agent_runs import AgentRunRegistry
 from tg_radar.api_routes.admin import router as admin_router
 from tg_radar.api_routes.channels import fetch_channel_messages
 from tg_radar.api_routes.deps import get_state
+from tg_radar.config import get_settings
 from tg_radar.schemas import AgentActionType, ChannelFetchRequest, CollectionAgentAction, CollectionAgentResponse, CollectionAgentStep, ParsedMessage, ParsedPage
+
+
+@pytest.fixture(autouse=True)
+def _without_api_token(monkeypatch):
+    """The suite must not depend on a developer's .env: run the API without a bearer token."""
+
+    monkeypatch.setenv("TG_RADAR_API_TOKEN", "")
+    get_settings.cache_clear()
+    yield
+    get_settings.cache_clear()
 
 
 def test_system_router_paths_are_registered():
